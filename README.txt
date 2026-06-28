@@ -3,3 +3,6 @@ https://overleaf.dei.unipd.it/5783919713nzbsvkzxkfrx#1e551d
 
 Comando per lanciare simulazione parallela:
 mpiexec -n numero_processori python3 forest_fire_mpi.py
+
+Chat con Gemini:
+https://share.gemini.google/6btSqS6Twg8A
