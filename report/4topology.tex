@@ -1,7 +1,9 @@
 \section{Topology-aware implementation}
 
 \subsection{Topologies considered}
-For the parallelization of the Forest Fire simulation, we implemented a two-dimensional Cartesian grid topology (2D Mesh/Torus). Given the intrinsic two-dimensional nature of the simulated space and the Von Neumann neighborhood data dependencies, mapping the algorithm onto a 2D processor grid minimizes the communication perimeter while maximizing the local computation volume. 
+For the parallelization of the Forest Fire simulation, we implemented and compared two Cartesian decompositions of the global grid. The first is a \textbf{1D decomposition} (Linear Array), in which the global matrix is split into horizontal slabs: each processor owns a contiguous block of $N / p$ full rows and communicates only with its two vertical neighbors (North and South). The second is a \textbf{2D decomposition} (Mesh), in which the matrix is partitioned into rectangular blocks of size approximately $(N / \sqrt{p}) \times (N / \sqrt{p})$ and each processor exchanges data with up to four neighbors (North, South, East, West).
+
+Given the intrinsic two-dimensional nature of the simulated space and the Von Neumann neighborhood data dependencies, the 2D mapping minimizes the communication perimeter while maximizing the local computation volume. For a fixed number of processors $p$, the 1D decomposition exchanges $\mathcal{O}(N)$ elements per process (two full rows of length $N$), whereas the 2D decomposition exchanges only $\mathcal{O}(N / \sqrt{p})$ elements per process. We therefore expect the 2D topology to dominate as $p$ grows; Section~7 quantifies this trade-off empirically. Both topologies are realized through the same MPI Cartesian-communicator machinery, differing only in the process-grid dimensions passed at start-up.
 
 \subsection{Embedding the communication pattern}
 To embed the algorithm's communication pattern, the global $N \times N$ matrix is partitioned into 2D sub-blocks. Each processor is assigned a local sub-grid of dimensions $(N / \sqrt{p}) \times (N / \sqrt{p})$. 

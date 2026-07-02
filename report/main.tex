@@ -38,7 +38,7 @@
 \input{8discussion}
 
 \section{Conclusions}
-5-10 sentences. The headline result and the main lesson learned.
+We designed, implemented, and analysed a topology-aware MPI parallelization of the Forest Fire cellular automaton, comparing 1D row-slab and 2D block decompositions with a halo-exchange communication pattern. On an 8-core workstation the parallel version reached a best speedup of $3.7\times$ at four processes on the largest ($2000\times2000$) grid, with a parallel efficiency of $0.93$. The computation phase scaled almost ideally, confirming that the automaton is embarrassingly parallel within each time step; the limiting factor was instead the halo exchange, whose relative cost grew from $6\%$ at $p=4$ to over $50\%$ at $p=8$ and produced a clear performance regression once the physical cores were oversubscribed. Speedup improved with grid size, a textbook manifestation of the surface-to-volume ratio. The main lesson is that the ``best'' topology is hardware-dependent: on a shared-memory node the 1D decomposition matched or beat the 2D one because message latency and count, not volume, dominated---the asymptotic advantage of 2D blocking would only surface on a distributed-memory cluster. The most promising improvement is to overlap communication with the update of interior cells via non-blocking \texttt{MPI\_Isend}/\texttt{MPI\_Irecv}, which would directly attack the bottleneck we identified.
 
 \begin{thebibliography}{1}
 \bibitem{cormen}
