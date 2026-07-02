@@ -1,0 +1,28 @@
+\section{Results}
+Brief description and table and/or plot for each section.
+
+\subsection{Execution time}
+Inserisci tabelle o grafici del tempo totale al variare del numero di processi $p$ e della dimensione della griglia.
+TEST FATTI:
+Starting sequential simulation on a 1000x1000 grid for 500 steps
+Total Execution Time: 8.1326 seconds
+
+
+Parallel Simulation completed on 4 MPI processes.
+Processor Grid Topology: 2x2
+Global Grid: 1000x1000, Steps: 500
+Execution Time: 4.4226 seconds
+
+
+\subsection{Speedup and efficiency}
+Mostra i grafici dello Speedup $S(p) = T_{base}/T(p)$ e dell'efficienza $E(p) = S(p)/p$.
+
+\subsection{Comparison across topologies}
+Confronta le performance della scomposizione 1D (Linear Array/Ring) contro la scomposizione 2D (Mesh/Torus). Quale domina?
+
+\subsection{Computation vs. communication}
+Inserisci un grafico a barre impilate (stacked bar chart) che mostra la frazione di tempo spesa nel calcolo della matrice vs.\ il tempo speso ad aspettare lo scambio dei bordi in MPI.
+
+\subsection{Scalability}
+Analisi della scalabilità (es. Weak Scaling: aumento della griglia parallelamente all'aumento dei processori).
+

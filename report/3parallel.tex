@@ -1,0 +1,21 @@
+\section{Parallel design}
+
+\subsection{Dependency analysis}
+To design an effective parallel algorithm, we first must identify the data dependencies inherent in the sequential model. In the Forest Fire cellular automaton, the transition function dictates that the state of any cell $\mathcal{G}[i][j]$ at time step $t+1$ depends exclusively on the state of that specific cell and its four immediate orthogonal neighbors at time step $t$. 
+
+Crucially, there are no intra-step dependencies. Computing the new state of a given cell at time $t+1$ does not require the updated $t+1$ state of any other cell. As a result, the evaluation of the grid within a single time step constitutes an \textit{embarrassingly parallel} phase. The global grid can be spatially partitioned into disjoint sub-grids and assigned to independent processors, which can update the internal cells of their assigned domains entirely concurrently.
+
+    However, the algorithm imposes a strict temporal partial order: all cells in the grid must complete step $t$ before any cell can begin evaluating step $t+1$. This necessitates a strict synchronization point at the end of each iteration. While processors can compute their internal domains independently, they must synchronize to resolve boundary conditions before advancing the simulation clock.
+
+\subsection{Communication pattern}
+Because the state transition rule relies on the Von Neumann neighborhood, cells located at the edges of a local sub-grid require data from adjacent sub-grids managed by different processors. To resolve this without violating the temporal dependencies, we employ a standard \textit{halo exchange} (or \textit{ghost cell}) communication pattern.
+
+Each processor allocates its local sub-grid with an additional outer boundary of "ghost" cells. These ghost cells act as read-only buffers that store the most recent boundary states of the neighboring processors. At the synchronization point of each time step, before the computation phase begins, processors must exchange their outermost rows and columns.
+
+The specifics of this point-to-point communication are as follows:
+\begin{itemize}
+    \item \textbf{Who talks to whom:} Depending on the spatial decomposition, a processor will communicate with its topological neighbors. For instance, in a 2D Cartesian topology, a processor $P_{i,j}$ will perform bi-directional exchanges with up to four neighbors: North ($P_{i-1,j}$), South ($P_{i+1,j}$), East ($P_{i,j+1}$), and West ($P_{i,j-1}$). In a 1D decomposition, it will only communicate with two neighbors.
+    \item \textbf{Message volume per step:} The volume of data exchanged is strictly proportional to the perimeter of the sub-grid. Assuming a total square grid of size $N \times N$ evenly distributed across $p$ processors in a 2D block grid, each processor manages a local domain of size approximately $\frac{N}{\sqrt{p}} \times \frac{N}{\sqrt{p}}$. During each step, a processor sends and receives four messages, yielding a total communication volume of $\mathcal{O}(\frac{N}{\sqrt{p}})$ elements per process.
+\end{itemize}
+
+This halo exchange represents the primary communication overhead of our parallel design. By structuring the communication as purely point-to-point exchanges rather than collective broadcasts, we ensure that the communication bandwidth scales efficiently with the number of processors.

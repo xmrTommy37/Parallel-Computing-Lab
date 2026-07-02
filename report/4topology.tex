@@ -1,0 +1,9 @@
+\section{Topology-aware implementation}
+
+\subsection{Topologies considered}
+For the parallelization of the Forest Fire simulation, we implemented a two-dimensional Cartesian grid topology (2D Mesh/Torus). Given the intrinsic two-dimensional nature of the simulated space and the Von Neumann neighborhood data dependencies, mapping the algorithm onto a 2D processor grid minimizes the communication perimeter while maximizing the local computation volume. 
+
+\subsection{Embedding the communication pattern}
+To embed the algorithm's communication pattern, the global $N \times N$ matrix is partitioned into 2D sub-blocks. Each processor is assigned a local sub-grid of dimensions $(N / \sqrt{p}) \times (N / \sqrt{p})$. 
+
+To handle the boundary conditions gracefully, we expanded each local sub-grid by adding a one-cell thick outer layer, known as \textit{ghost cells} or \textit{halo}. Before the computation of each time step, each processor extracts its outermost internal rows and columns and sends them to its respective neighbors in the Cartesian topology (North, South, East, West). Simultaneously, it receives the corresponding borders from its neighbors and writes them into its own ghost cells. This point-to-point halo exchange accurately maps the spatial dependencies of the simulation directly onto the edges of the MPI topology.

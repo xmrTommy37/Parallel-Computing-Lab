@@ -1,0 +1,49 @@
+\section{Sequential algorithm}
+
+\subsection{Problem definition}
+We formalize the Forest Fire simulation as a probabilistic cellular automaton operating on a square two-dimensional spatial grid $\mathcal{G}$ of dimensions $N \times N$. Each cell $(i, j)$ within the grid, where $0 \le i < N$ and $0 \le j < N$, can exist in exactly one of three mutually exclusive states at any given discrete time step $t$: $s \in \{EMPTY, TREE, FIRE\}$. 
+
+The dynamics of the system are governed by localized interactions and stochastic processes. Specifically, we define two input probability parameters:
+\begin{itemize}
+    \item $p \in [0, 1]$: The probability of a new tree growing in an empty cell.
+    \item $l \in [0, 1]$: The probability of a tree spontaneously igniting due to a lightning strike.
+\end{itemize}
+The propagation of the fire relies on the standard Von Neumann neighborhood, meaning that the state of any cell $(i, j)$ at time $t+1$ depends solely on its own state and the states of its four orthogonal neighbors (North, South, East, West) at time $t$.
+
+\subsection{Algorithm and complexity}
+In our baseline sequential implementation, we simulate the evolution of the grid over $T$ total time steps. At each time step, we apply the transition rules uniformly across all cells. The standard rules dictate that a burning cell consumes its fuel and becomes empty; a tree ignites if it is adjacent to a burning cell or catches fire spontaneously with probability $l$; and an empty space grows a tree with probability $p$.
+
+The pseudocode for this sequential process is detailed in Algorithm \ref{alg:sequential_forest}.
+
+\begin{algorithm}[H]
+\caption{Sequential Forest Fire Simulation}
+\label{alg:sequential_forest}
+\begin{algorithmic}[1]
+\REQUIRE Grid dimension $N$, probabilities $p, l$, number of steps $T$
+\ENSURE Evolved grid states over time
+\FOR{$t = 1$ \TO $T$}
+    \STATE Allocate an empty grid $\mathcal{G}_{next}$ of size $N \times N$
+    \FOR{each cell $(i, j)$ in $\mathcal{G}$}
+        \IF{$\mathcal{G}[i][j] == FIRE$}
+            \STATE $\mathcal{G}_{next}[i][j] \leftarrow EMPTY$
+        \ELSIF{$\mathcal{G}[i][j] == TREE$}
+            \IF{any orthogonal neighbor is $FIRE$}
+                \STATE $\mathcal{G}_{next}[i][j] \leftarrow FIRE$
+            \ELSE
+                \STATE $\mathcal{G}_{next}[i][j] \leftarrow FIRE$ with probability $l$
+                \STATE $\mathcal{G}_{next}[i][j] \leftarrow TREE$ with probability $(1 - l)$
+            \ENDIF
+        \ELSIF{$\mathcal{G}[i][j] == EMPTY$}
+            \STATE $\mathcal{G}_{next}[i][j] \leftarrow TREE$ with probability $p$
+            \STATE $\mathcal{G}_{next}[i][j] \leftarrow EMPTY$ with probability $(1 - p)$
+        \ENDIF
+    \ENDFOR
+    \STATE $\mathcal{G} \leftarrow \mathcal{G}_{next}$
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+To ensure that the state transitions remain purely synchronous and to prevent data hazards (such as read-after-write conflicts during a single iteration), we employ a double-buffering technique. The new states are written to an auxiliary grid, $\mathcal{G}_{next}$, before being copied back to the primary grid $\mathcal{G}$ at the end of the time step.
+
+\textbf{Complexity Analysis:} 
+Because we must maintain two full grid structures simultaneously to preserve the strict data-dependency constraints, the space complexity of our sequential algorithm is strictly bounded by $\mathcal{O}(N^2)$. Regarding time complexity, calculating the next state for a single cell requires a constant $\mathcal{O}(1)$ number of operations (evaluating the four neighbors and generating pseudo-random numbers). Since we must traverse the entire $N \times N$ grid at each time step, the temporal complexity per iteration is $\mathcal{O}(N^2)$. Thus, the overall time complexity for the complete simulation over $T$ steps is $\mathcal{O}(T \times N^2)$.

@@ -1,0 +1,52 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel} % Impostato in italiano, puoi cambiarlo in {english} se preferisci
+\usepackage{geometry}
+\geometry{a4paper, margin=25mm}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{hyperref}
+\usepackage{cite}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Parallel Computing Project Report},
+    pdfpagemode=FullScreen,
+}
+
+\title{\textbf{Parallel Computing Project Report:\\ Parallel Forest Fire Simulation using MPI}}
+\author{\textbf{Matteo Trevisan and Tommaso Zogno} \\ Università degli Studi di Padova}
+\date{Academic year 2025/2026}
+
+\begin{document}
+
+\maketitle
+
+\input{1intro}
+\input{2sequential}
+\input{3parallel}
+\input{4topology}
+\input{5mpi}
+\input{6esperimentalsetup}
+\input{7results}
+\input{8discussion}
+
+\section{Conclusions}
+5-10 sentences. The headline result and the main lesson learned.
+
+\begin{thebibliography}{1}
+\bibitem{cormen}
+T. H. Cormen, C. E. Leiserson, R. L. Rivest, C. Stein, \textit{Introduction to Algorithms}, 4th ed., MIT Press.
+\bibitem{mpi4py}
+L. Dalcin, \textit{mpi4py: MPI for Python}, Journal of Parallel and Distributed Computing.
+\bibitem{drossel1992}
+B. Drossel, F. Schwabl, \textit{Self-organized critical forest-fire model}, Physical Review Letters, 69(11), 1629, 1992.
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,9 @@
+\section{MPI implementation notes}
+
+\subsection{Language and build}
+We opted to develop the simulation in Python, utilizing the \texttt{mpi4py} library for message passing and \texttt{NumPy} for matrix operations. This choice was driven by the necessity for rapid prototyping and the inherent advantages of vectorized operations. By leveraging \texttt{NumPy} array slicing and Boolean masking, the core state transitions are executed as highly optimized C-level routines under the hood, effectively bypassing the performance bottlenecks of native Python loops and the Global Interpreter Lock (GIL).
+
+\subsection{Topology realisation in MPI}
+The logical 2D topology was realized using the \texttt{MPI.COMM\_WORLD.Create\_cart} routine. We allowed MPI to dynamically determine the optimal grid dimensions based on the available number of processes using \texttt{MPI.Compute\_dims}. To establish the communication channels for the halo exchange, we utilized the \texttt{Shift} method on the Cartesian communicator, which elegantly automatically resolves the ranks of the adjacent nodes and returns \texttt{MPI.PROC\_NULL} for boundaries lying on the absolute edges of the global grid.
+
+To facilitate the bidirectional data exchange without risking deadlocks, we employed the \texttt{Sendrecv} primitive. This ensures that every process can simultaneously dispatch its boundary arrays and receive the incoming ghost cells from its neighbors in a single, safe operation.
