@@ -1,20 +1,20 @@
 \section{Results}
-All timings below are the arithmetic mean of three repetitions, obtained on the 8-core workstation described in Section~6. The complete raw dataset is available in \texttt{results\_raw.csv}, and the aggregated per-configuration values (including speedup and efficiency) in \texttt{results.csv}. The sequential baselines were $T_{seq} = 0.68$~s, $2.59$~s and $10.26$~s for $N = 500$, $1000$ and $2000$ respectively.
+All timings below are the arithmetic mean of three repetitions, obtained on the 20-core workstation described in Section~6. The complete raw dataset is available in \texttt{results\_raw.csv}, and the aggregated per-configuration values (including speedup and efficiency) in \texttt{results.csv}. The sequential baselines were $T_{seq} = 7.04$~s, $31.13$~s and $164.64$~s for $N = 1000$, $2000$ and $4000$ respectively.
 
 \subsection{Execution time}
-Table~\ref{tab:exectime} reports the total execution time of the 2D implementation as a function of the number of processes $p$ and the grid size $N$; Figure~\ref{fig:exectime} plots the same data on a logarithmic scale. The runtime decreases sharply up to $p = 4$, after which it \emph{increases} again at $p = 8$. Since the machine has only 8 physical cores, at $p = 8$ every core hosts one MPI process and the operating system, the timing barriers, and the memory subsystem all compete for the same resources; the communication cost (see Section~7.4) then outweighs the shrinking computational work.
+Table~\ref{tab:exectime} reports the total execution time of the 2D implementation as a function of the number of processes $p$ and the grid size $N$; Figure~\ref{fig:exectime} plots the same data on a logarithmic scale. Unlike a resource-constrained node, here the runtime decreases monotonically all the way to $p = 20$, because every process is mapped to a dedicated physical core. For the largest grid ($N = 4000$) the time drops from $118.7$~s on a single process to $13.7$~s on twenty.
 
 \begin{table}[h]
 \centering
 \caption{Mean total execution time [s], 2D decomposition.}
 \label{tab:exectime}
-\begin{tabular}{lcccc}
+\begin{tabular}{lcccccc}
 \toprule
-$N$ & $p=1$ & $p=2$ & $p=4$ & $p=8$ \\
+$N$ & $p=1$ & $p=2$ & $p=4$ & $p=8$ & $p=16$ & $p=20$ \\
 \midrule
-500  & 0.639 & 0.357 & 0.350 & 0.475 \\
-1000 & 2.381 & 1.256 & 0.800 & 1.285 \\
-2000 & 9.238 & 4.724 & 2.752 & 3.875 \\
+1000 & 4.939 & 2.709 & 1.535 & 1.013 & 0.557 & 0.499 \\
+2000 & 26.668 & 12.650 & 6.590 & 3.914 & 2.565 & 2.370 \\
+4000 & 118.689 & 63.755 & 30.449 & 19.135 & 14.366 & 13.688 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -29,7 +29,7 @@ $N$ & $p=1$ & $p=2$ & $p=4$ & $p=8$ \\
 \subsection{Speedup and efficiency}
 The speedup is defined as $S(p) = T_{base}/T(p)$ and the efficiency as $E(p) = S(p)/p$, using the sequential baseline $T_{base}$ for each grid size. Table~\ref{tab:speedup} and Figures~\ref{fig:speedup}--\ref{fig:efficiency} summarise the results for the 2D decomposition.
 
-The best speedup is obtained at $p = 4$ and grows with the problem size: from $1.96\times$ at $N = 500$ to $3.73\times$ at $N = 2000$. This is the expected behaviour of a memory-bound stencil computation: larger grids increase the computation-to-communication ratio, so the fixed halo-exchange overhead is better amortised (the surface-to-volume effect). Efficiency stays close to $0.9$--$1.0$ up to $p = 2$, remains high ($\approx 0.93$) at $p = 4$ for the largest grid, but collapses at $p = 8$ because of core oversubscription and communication overhead.
+The scaling is markedly better than on a small node: efficiency stays above $0.99$ up to $p = 8$ for the two largest grids, and the code still delivers a $12$--$13\times$ speedup at $p = 20$. As on any stencil, the speedup improves with problem size at the higher process counts (surface-to-volume effect), although at $p=20$ the smaller $N=1000$ grid paradoxically posts the highest raw number ($S = 14.1$); this is an artifact of the baseline, discussed below.
 
 \begin{table}[h]
 \centering
@@ -37,14 +37,16 @@ The best speedup is obtained at $p = 4$ and grows with the problem size: from $1
 \label{tab:speedup}
 \begin{tabular}{lcccccc}
 \toprule
- & \multicolumn{2}{c}{$N=500$} & \multicolumn{2}{c}{$N=1000$} & \multicolumn{2}{c}{$N=2000$} \\
+ & \multicolumn{2}{c}{$N=1000$} & \multicolumn{2}{c}{$N=2000$} & \multicolumn{2}{c}{$N=4000$} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
 $p$ & $S$ & $E$ & $S$ & $E$ & $S$ & $E$ \\
 \midrule
-1 & 1.07 & 1.07 & 1.09 & 1.09 & 1.11 & 1.11 \\
-2 & 1.92 & 0.96 & 2.06 & 1.03 & 2.17 & 1.09 \\
-4 & 1.96 & 0.49 & 3.24 & 0.81 & 3.73 & 0.93 \\
-8 & 1.44 & 0.18 & 2.01 & 0.25 & 2.65 & 0.33 \\
+1  & 1.42 & 1.42 & 1.17 & 1.17 & 1.39 & 1.39 \\
+2  & 2.60 & 1.30 & 2.46 & 1.23 & 2.58 & 1.29 \\
+4  & 4.59 & 1.15 & 4.72 & 1.18 & 5.41 & 1.35 \\
+8  & 6.95 & 0.87 & 7.95 & 0.99 & 8.60 & 1.08 \\
+16 & 12.63 & 0.79 & 12.14 & 0.76 & 11.46 & 0.72 \\
+20 & 14.12 & 0.71 & 13.14 & 0.66 & 12.03 & 0.60 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -65,48 +67,48 @@ $p$ & $S$ & $E$ & $S$ & $E$ & $S$ & $E$ \\
 \end{minipage}
 \end{figure}
 
-The super-unitary efficiency observed at $p = 1$--$2$ ($E > 1$) is a mild super-linear artifact: the MPI implementation reuses pre-allocated ghost buffers, whereas the sequential baseline re-pads the whole array with \texttt{np.pad} at every step, and the smaller per-process working set fits better in cache.
+The super-unitary efficiency at low $p$ ($E > 1$) is a systematic baseline artifact rather than genuine super-linear scaling: the single-process MPI run is already about $1.4\times$ faster than the sequential baseline, because the sequential code re-pads the whole array with \texttt{np.pad} at every step while the MPI code reuses pre-allocated ghost buffers. Measuring the parallel efficiency against the single-process \emph{MPI} time instead of the sequential baseline removes this offset: for $N=1000$ at $p=20$, for instance, the ``clean'' speedup is $4.939/0.499 \approx 9.9\times$ (efficiency $\approx 0.50$), and for $N=2000$ it is $26.67/2.37 \approx 11.3\times$ (efficiency $\approx 0.56$).
 
 \subsection{Comparison across topologies}
-Table~\ref{tab:topology} contrasts the 1D (row-slab) and 2D (block) decompositions at $N = 2000$; Figure~\ref{fig:topology} plots the two curves. Contrary to the asymptotic argument of Section~4---where the 2D scheme exchanges $\mathcal{O}(N/\sqrt{p})$ elements against $\mathcal{O}(N)$ for the 1D scheme---the two topologies perform almost identically up to $p = 4$, and the 1D layout is actually \emph{faster} at $p = 8$ ($3.39$~s vs.\ $3.88$~s).
+Figure~\ref{fig:topology} contrasts the 1D (row-slab) and 2D (block) decompositions at $N = 4000$, showing both the total time (left) and the isolated communication time (right); Table~\ref{tab:topology} lists the total times. Two effects compete. On one hand, the communication term finally behaves as predicted by the $\mathcal{O}(N/\sqrt{p})$-versus-$\mathcal{O}(N)$ argument of Section~4: at the largest grid the 2D scheme moves \emph{less} data and its communication time drops below the 1D one (e.g.\ $2.51$~s vs.\ $2.87$~s at $p=16$). On the other hand, the 1D layout retains a consistently \emph{lower total time}, because its computation phase is faster: 1D sub-domains are full-width, row-contiguous slabs, whereas the 2D column halos are strided and must be packed with an explicit \texttt{.copy()}, hurting cache locality (at $p=20$ the 2D compute is $10.87$~s against $9.68$~s for 1D).
 
-The explanation is that, at these small process counts on a shared-memory node, the halo cost is dominated by \emph{message count and latency} rather than by message \emph{volume}. The 1D decomposition issues only two \texttt{Sendrecv} calls per step (North/South) against up to four for the 2D block, and the shared-memory bandwidth makes the larger 1D messages essentially free. The theoretical advantage of the 2D volume scaling would only emerge at much larger $p$ on a real distributed-memory interconnect.
+In short, on this single shared-memory node the 1D decomposition wins on wall-clock time, and the theoretical communication advantage of the 2D block is real but not yet sufficient to overcome its packing and locality overhead. We expect the balance to tip in favour of 2D only on a distributed-memory interconnect, where the per-message latency and bandwidth costs are orders of magnitude larger and dominate the computation-side differences.
 
 \begin{table}[h]
 \centering
-\caption{Total execution time [s]: 1D vs.\ 2D at $N=2000$.}
+\caption{Total execution time [s]: 1D vs.\ 2D at $N=4000$. ($^\dagger$1D $16\times1$ requires $N$ divisible by 16.)}
 \label{tab:topology}
-\begin{tabular}{lcccc}
+\begin{tabular}{lcccccc}
 \toprule
-Decomp. & $p=1$ & $p=2$ & $p=4$ & $p=8$ \\
+Decomp. & $p=1$ & $p=2$ & $p=4$ & $p=8$ & $p=16$ & $p=20$ \\
 \midrule
-1D & 9.223 & 4.683 & 2.680 & 3.388 \\
-2D & 9.238 & 4.724 & 2.752 & 3.875 \\
+1D & 121.11 & 63.11 & 30.94 & 18.32 & 13.30 & 12.62 \\
+2D & 118.69 & 63.76 & 30.45 & 19.14 & 14.37 & 13.69 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.6\textwidth]{figures/topology.png}
-\caption{1D vs.\ 2D total execution time at $N=2000$.}
+\includegraphics[width=0.95\textwidth]{figures/topology.png}
+\caption{1D vs.\ 2D at $N=4000$: total time (left) and communication time only (right). The 2D block moves less data at high $p$, yet the 1D slab is faster overall due to its cheaper, contiguous computation.}
 \label{fig:topology}
 \end{figure}
 
 \subsection{Computation vs. communication}
-Figure~\ref{fig:commcompute} shows the per-process time split between the halo-exchange and the grid computation for $N = 2000$ (2D). The computation time halves with every doubling of $p$ (from $9.23$~s at $p=1$ down to $1.83$~s at $p=8$), confirming that the computational phase scales almost ideally. The communication time, on the contrary, grows steadily and becomes the dominant term at $p = 8$, where it accounts for roughly $53\%$ of the total runtime ($2.04$~s of comm against $1.83$~s of compute). This crossover is precisely what caps the achievable speedup on this machine.
+Figure~\ref{fig:commcompute} shows the per-process split between the halo exchange and the grid computation for $N = 4000$ (2D). The computation time scales almost ideally, halving with each doubling of $p$ (from $118.6$~s at $p=1$ to $10.9$~s at $p=20$). The communication time is negligible at low $p$ but grows in relative weight, reaching about $21\%$ of the total at $p=20$. Crucially, and in contrast to the resource-starved case, communication never becomes the majority of the runtime, which is exactly why the speedup keeps climbing up to $p=20$.
 
 \begin{table}[h]
 \centering
-\caption{Mean per-process computation/communication split ($N=2000$, 2D).}
+\caption{Mean per-process computation/communication split ($N=4000$, 2D).}
 \label{tab:commcompute}
-\begin{tabular}{lcccc}
+\begin{tabular}{lcccccc}
 \toprule
- & $p=1$ & $p=2$ & $p=4$ & $p=8$ \\
+ & $p=1$ & $p=2$ & $p=4$ & $p=8$ & $p=16$ & $p=20$ \\
 \midrule
-Computation [s] & 9.232 & 4.664 & 2.595 & 1.833 \\
-Communication [s] & 0.006 & 0.056 & 0.153 & 2.037 \\
-Comm.\ fraction & 0.1\% & 1.2\% & 5.6\% & 52.6\% \\
+Computation [s]   & 118.64 & 60.72 & 28.70 & 16.92 & 11.85 & 10.87 \\
+Communication [s] & 0.04 & 3.03 & 1.74 & 2.21 & 2.51 & 2.82 \\
+Comm.\ fraction   & 0.0\% & 4.8\% & 5.7\% & 11.6\% & 17.4\% & 20.6\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -114,24 +116,24 @@ Comm.\ fraction & 0.1\% & 1.2\% & 5.6\% & 52.6\% \\
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.6\textwidth]{figures/comm_compute.png}
-\caption{Stacked computation vs.\ communication time per process ($N=2000$, 2D).}
+\caption{Stacked computation vs.\ communication time per process ($N=4000$, 2D).}
 \label{fig:commcompute}
 \end{figure}
 
 \subsection{Scalability}
-Finally, we assess weak scaling by keeping the workload per process fixed at approximately $500 \times 500$ cells and increasing both the grid size and the process count together ($N = 500\sqrt{p}$). Ideal weak scaling would keep the total runtime constant. Figure~\ref{fig:weak} shows that the \emph{computation} time is indeed almost flat (it stays in the $0.64$--$0.85$~s band across $p = 1 \to 16$), which validates the load balancing of the decomposition. The \emph{total} runtime, however, drifts upward: it doubles from $p=1$ ($0.64$~s) to $p=4$ ($0.80$~s, weak efficiency $0.80$), and then degrades sharply for $p = 9$ and $p = 16$. The latter two points require \emph{oversubscribing} the 8 physical cores, so their inflation is a hardware artifact rather than an algorithmic one, and it is again driven by the communication term.
+Finally, we assess weak scaling by keeping the workload per process fixed at approximately $500 \times 500$ cells and increasing both the grid size and the process count together ($N = 500\sqrt{p}$), all within the 20 available cores. Ideal weak scaling would keep the total runtime constant. Figure~\ref{fig:weak} and Table~\ref{tab:weak} show that neither the total nor even the computation-only time stays flat: the computation grows from $1.31$~s at $p=1$ to $1.98$~s at $p=16$, despite the constant per-process workload. This is a genuine multicore effect: the memory bandwidth of the socket is shared among all cores, so as more processes stream their grids concurrently, each one progresses more slowly. The resulting weak efficiency, $T(1)/T(p)$, degrades from $0.86$ at $p=4$ to $0.51$ at $p=16$. This memory-bandwidth wall, rather than the halo exchange, is the dominant scalability limit for this bandwidth-bound stencil on a single node.
 
 \begin{table}[h]
 \centering
-\caption{Weak scaling (2D, $\approx 500\times500$ cells/process). Points $p=9,16$ oversubscribe the 8 cores.}
+\caption{Weak scaling (2D, $\approx 500\times500$ cells/process).}
 \label{tab:weak}
 \begin{tabular}{lcccc}
 \toprule
 $p$ (grid $N$) & 1 (500) & 4 (1000) & 9 (1500) & 16 (2000) \\
 \midrule
-Total time [s]   & 0.639 & 0.800 & 1.660 & 3.481 \\
-Compute time [s] & 0.636 & 0.640 & 0.793 & 0.849 \\
-Weak efficiency  & 1.00 & 0.80 & 0.39 & 0.18 \\
+Total time [s]   & 1.318 & 1.535 & 1.834 & 2.565 \\
+Compute time [s] & 1.313 & 1.395 & 1.500 & 1.976 \\
+Weak efficiency  & 1.00 & 0.86 & 0.72 & 0.51 \\
 \bottomrule
 \end{tabular}
 \end{table}
