@@ -1,9 +1,3 @@
-Link al report su Overleaf (come editor)
-https://overleaf.dei.unipd.it/5783919713nzbsvkzxkfrx#1e551d
-
-Chat con Gemini:
-https://share.gemini.google/6btSqS6Twg8A
-
 ============================================================
 USO DEGLI SCRIPT
 ============================================================
